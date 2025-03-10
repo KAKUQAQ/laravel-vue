@@ -14,5 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'api/*', // 让 Vue 访问 API 时不会触发 CSRF 保护
         'sanctum/csrf-cookie', // 允许 Sanctum 认证
+        'register', // ✅ 允许注册时绕过 CSRF
+        'login', // ✅ 允许登录绕过 CSRF
     ];
 }
