@@ -18,7 +18,7 @@ async function fetchUser() {
 
 // 退出登录
 async function logout() {
-  await fetch("http://laravel-vue.local/logout", {
+  await fetch("http://laravel-vue.local/api/logout", {
     method: "POST",
     credentials: "include",
   });
@@ -49,10 +49,10 @@ onMounted(fetchUser);
         <!-- 右侧用户菜单 -->
         <div class="flex space-x-4">
           <template v-if="user">
-            <router-link to="/profile" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <router-link to="/profile" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
               个人中心
             </router-link>
-            <button @click="logout" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+            <button @click="logout" class="bg-yellow-600 transition">
               退出
             </button>
           </template>
