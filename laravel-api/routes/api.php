@@ -38,7 +38,7 @@ Route::middleware('guest')->group(function () {
 
     // 重置密码
     Route::post('/reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.update');
+        ->name('password.store');
 });
 
 // 已经通过 Sanctum 认证的用户才可访问的路由
@@ -49,9 +49,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ->name('verification.send');
 
     // 验证邮箱（从邮件链接点击过来，要求链接携带签名）
-    Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
-        ->middleware('signed')
-        ->name('verification.verify');
+
 
     // (可选) 获取当前登录用户的信息
     Route::get('/user', function (Request $request) {
@@ -62,3 +60,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+->middleware('signed')
+->name('verification.verify');

@@ -90,8 +90,8 @@ export default {
         });
 
         if (response.ok) {
-          ElMessage.success("✅ 注册成功，请登录");
-          this.$router.push("/proflie");
+          ElMessage.success("✅ 注册成功，请查看邮箱进行邮箱验证");
+          this.$router.push("/verify-email");
         } else {
           const errorData = await response.json();
           ElMessage.error(`❌ 注册失败: ${errorData.message || "请检查输入"}`);
