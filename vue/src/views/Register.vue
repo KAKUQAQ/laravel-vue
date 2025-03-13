@@ -29,80 +29,51 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      isSubmitting: false, // 防止重复提交
-    };
-  },
-  computed: {
-    // 计算属性：检测密码是否一致
-    passwordMismatch() {
-      return this.password !== this.confirmPassword && this.confirmPassword.length > 0;
-    }
-  },
-  methods: {
-    async register() {
-      if (this.passwordMismatch) {
-        return ElMessage.warning("❌ 两次输入的密码不一致");
-      }
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { apiRequest } from '../utils/api';
+import { ElMessage } from 'element-plus';
 
-      if (this.isSubmitting) return;
-      this.isSubmitting = true;
+const router = useRouter();
 
-      try {
-        // 1️⃣ **先获取 CSRF 令牌**
-        await fetch("http://laravel-vue.local/sanctum/csrf-cookie", {
-          method: "GET",
-          credentials: "include",
-        });
+const name = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const isSubmitting = ref(false);
 
-        // 2️⃣ **获取 `XSRF-TOKEN`**
-        const xsrfToken = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("XSRF-TOKEN="))
-          ?.split("=")[1];
+const passwordMismatch = computed(
+  () => {password.value !== confirmPassword.value && confirmPassword.value.length > 0;});
 
-        if (!xsrfToken) {
-          ElMessage.error("❌ CSRF 令牌获取失败，请检查 `sanctum/csrf-cookie` 是否返回正确的 Cookie。");
-          return;
-        }
-
-        // 3️⃣ **发送注册请求**
-        const response = await fetch("http://laravel-vue.local/api/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-XSRF-TOKEN": decodeURIComponent(xsrfToken),
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            name: this.name,
-            email: this.email,
-            password: this.password,
-            password_confirmation: this.confirmPassword,
-          }),
-        });
-
-        if (response.ok) {
-          ElMessage.success("✅ 注册成功，请查看邮箱进行邮箱验证");
-          this.$router.push("/verify-email");
-        } else {
-          const errorData = await response.json();
-          ElMessage.error(`❌ 注册失败: ${errorData.message || "请检查输入"}`);
-        }
-      } catch (error) {
-        console.error("注册请求失败:", error);
-        ElMessage.error("❌ 网络错误，注册失败");
-      } finally {
-        this.isSubmitting = false;
-      }
-    }
+async function register() {
+  if (passwordMismatch.value) {
+    return ElMessage.warning("❌ 两次输入的密码不一致");
   }
-};
+  if (isSubmitting.value) return
+  isSubmitting.value = true;
+  try {
+    const response = await apiRequest("https://laravel-vue.local/api/register", {
+      method: 'POST',
+      body: JSON.stringify({
+        name: name.value,
+        email: email.value,
+        password: password.value,
+        password_confirmation: confirmPassword.value,
+      }),
+    });
+    if (response.ok) {
+      ElMessage.success('注册成功,请在登陆前验证邮箱');
+      router.push('/verify-email');
+    } else {
+      const errorData = await response.json();
+      ElMessage.error(`❌ 注册失败: ${errorData.message || '请检查账号或密码'}`);
+    }
+  } catch (error) {
+    console.error('注册失败:', error);
+    ElMessage.error("网络错误，注册失败");
+  } finally {
+    isSubmitting.value = false;
+  }
+}
 </script>

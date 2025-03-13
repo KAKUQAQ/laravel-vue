@@ -1,34 +1,19 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import {  ElMessage } from "element-plus";
+import {useUserStore} from "./stores/user";
 
 const router = useRouter();
-const user = ref(null);
+const userStore = useUserStore();
 
-// 获取当前登录用户
-async function fetchUser() {
-  const response = await fetch("http://laravel-vue.local/api/user", {
-    credentials: "include",
-  });
-
-  if (response.ok) {
-    user.value = await response.json();
-  }
-}
-
-// 退出登录
+onMounted(() => {
+  userStore.fetchUser();
+})
 async function logout() {
-  await fetch("http://laravel-vue.local/api/logout", {
-    method: "POST",
-    credentials: "include",
-  });
-
-  user.value = null;
-  router.push("/login"); // 退出后跳转到登录页
+  await userStore.logout();
+  router.push("/login");
 }
-
-// 页面加载时获取用户信息
-onMounted(fetchUser);
 </script>
 
 <template>
@@ -48,7 +33,7 @@ onMounted(fetchUser);
 
         <!-- 右侧用户菜单 -->
         <div class="flex space-x-4">
-          <template v-if="user">
+          <template v-if="userStore.user">
             <router-link to="/profile" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
               个人中心
             </router-link>

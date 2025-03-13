@@ -46,98 +46,40 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      email: "",
-      password: "",
-      rememberMe: false,
-      isSubmitting: false, // 防止重复提交
-    };
-  },
-  mounted() {
-    // **仅记住邮箱，不保存密码**
-    const savedEmail = localStorage.getItem("rememberedEmail");
-    if (savedEmail) {
-      this.email = savedEmail;
-      this.rememberMe = true;
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserStore } from '../stores/user';
+import { ElMessage } from 'element-plus';
+
+const router = useRouter();
+const userStore = useUserStore();
+
+const email = ref('');
+const password = ref('');
+const rememberMe = ref(false);
+const isSubmitting = ref(false);
+
+const savedEmail = localStorage.getItem('rememberedEmail');
+if (savedEmail) {
+  email.value = savedEmail;
+  rememberMe.value = true;
+}
+
+async function login() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+  try {await userStore.login(email.value, password.value, rememberMe.value);
+    ElMessage.success('登录成功');
+    if (userStore.user && userStore.user.email_verified_at) {
+      router.push('/profile');
+    } else {
+      router.push('/verify-email');
     }
-  },
-  methods: {
-    async login() {
-      if (this.isSubmitting) return;
-      this.isSubmitting = true;
-
-      try {
-        // 1️⃣ 先请求 Sanctum CSRF 令牌
-        await fetch("http://laravel-vue.local/sanctum/csrf-cookie", {
-          method: "GET",
-          credentials: "include",
-        });
-
-        // 2️⃣ 读取 `XSRF-TOKEN` 令牌
-        const xsrfToken = document.cookie
-          .split("; ")
-          .find(row => row.startsWith("XSRF-TOKEN="))
-          ?.split("=")[1];
-
-        if (!xsrfToken) {
-          ElMessage.error("❌ CSRF 令牌获取失败，请检查 `sanctum/csrf-cookie` 是否返回正确的 Cookie。");
-          return;
-        }
-
-        // 3️⃣ 发送登录请求
-        const response = await fetch("http://laravel-vue.local/api/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-XSRF-TOKEN": decodeURIComponent(xsrfToken), // ✅ 添加 CSRF 令牌
-          },
-          credentials: "include",
-          body: JSON.stringify({ email: this.email, password: this.password }),
-        });
-
-        if (response.ok) {
-          ElMessage.success("✅ 登录成功");
-
-          // 记住账号逻辑（不保存密码！）
-          if (this.rememberMe) {
-            localStorage.setItem("rememberedEmail", this.email);
-          } else {
-            localStorage.removeItem("rememberedEmail");
-          }
-
-          // 4️⃣ 登录成功后：检查是否已验证邮箱
-          const userInfoRes = await fetch("http://laravel-vue.local/api/user", {
-            credentials: "include",
-          });
-
-          if (userInfoRes.ok) {
-            const userData = await userInfoRes.json();
-            // 如果 userData.email_verified_at 存在，表示已验证，否则没验证
-            if (userData.email_verified_at) {
-              // 已验证 -> 跳转到 profile
-              this.$router.push("/profile");
-            } else {
-              // 未验证 -> 跳转到 verify-email
-              this.$router.push("/verify-email");
-            }
-          } else {
-            // 如果获取 user 出错，可以按照你需求决定去哪个页面
-            ElMessage.error("获取用户信息失败");
-          }
-        } else {
-          const errorData = await response.json();
-          ElMessage.error(`❌ 登录失败: ${errorData.message || "请检查账号或密码"}`);
-        }
-      } catch (error) {
-        console.error("登录请求失败:", error);
-        ElMessage.error("❌ 网络错误，登录失败");
-      } finally {
-        this.isSubmitting = false;
-      }
-    },
-  },
-};
+  } catch (error) {
+    console.error('登录失败:', error);
+    ElMessage.error('登录失败: ${error.message || "请检查账号或密码"}`');
+  } finally {
+    isSubmitting.value = false;}
+}
 </script>
