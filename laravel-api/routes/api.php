@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\ImageController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,7 +61,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // 用户登出
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // 更新用户信息
+    Route::put('/user/profile', [UserController::class, 'update'])
+        ->name('user.update');
+    
+    // 图片上传
+    Route::post('/image/upload', [ImageController::class, 'upload'])
+        ->name('image.upload');
 });
+
 Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
 ->middleware('signed')
 ->name('verification.verify');

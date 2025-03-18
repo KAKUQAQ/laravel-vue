@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiRequest } from '../utils/api';
 import { ElMessage } from 'element-plus';
@@ -44,7 +44,7 @@ const confirmPassword = ref('');
 const isSubmitting = ref(false);
 
 const passwordMismatch = computed(
-  () => {password.value !== confirmPassword.value && confirmPassword.value.length > 0;});
+  () => {return password.value !== confirmPassword.value && confirmPassword.value.length > 0;});
 
 async function register() {
   if (passwordMismatch.value) {
@@ -53,7 +53,7 @@ async function register() {
   if (isSubmitting.value) return
   isSubmitting.value = true;
   try {
-    const response = await apiRequest("https://laravel-vue.local/api/register", {
+    const response = await apiRequest("http://laravel-vue.local/api/register", {
       method: 'POST',
       body: JSON.stringify({
         name: name.value,

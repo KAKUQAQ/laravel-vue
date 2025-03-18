@@ -78,7 +78,7 @@ async function login() {
     }
   } catch (error) {
     console.error('登录失败:', error);
-    ElMessage.error('登录失败: ${error.message || "请检查账号或密码"}`');
+    ElMessage.error(`登录失败: ${error.message || "请检查账号或密码"}`);
   } finally {
     isSubmitting.value = false;}
 }
